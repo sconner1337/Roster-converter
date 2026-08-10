@@ -56,11 +56,13 @@ def load_roster_data():
 roster, name_to_line = load_roster_data()
 
 st.title("📅 Train Crew Calendar Generator")
-st.write("Select your name to instantly generate your personalized 52-week Google Calendar file.")
+st.write("Select your name below to instantly generate your personalized 52-week Google Calendar file. The schedule is automatically set to commence on **Sunday, August 9, 2026**.")
 
 # Simple Dropdown for Users
 selected_name = st.selectbox("Select your name from the roster:", options=sorted(name_to_line.keys()))
-start_date = st.date_input("Roster Start Date (Sunday)", datetime(2026, 8, 9))
+
+# Hardcoded start date
+START_DATE = datetime(2026, 8, 9)
 
 if st.button("Generate My Calendar", type="primary"):
     try:
@@ -76,7 +78,7 @@ if st.button("Generate My Calendar", type="primary"):
 
             shifts = roster[current_line]
             for day_idx in range(min(7, len(shifts))):
-                current_date = start_date + timedelta(days=week * 7 + day_idx)
+                current_date = START_DATE + timedelta(days=week * 7 + day_idx)
                 shift = shifts[day_idx]
 
                 if shift not in ["RD", "RDNA"]:
@@ -111,8 +113,7 @@ if st.button("Generate My Calendar", type="primary"):
         df = pd.DataFrame(events)
 
         st.success(f"Success! Generated {len(df)} shifts across {total_weeks} weeks for {selected_name}.")
-        st.dataframe(df.head(10))
-
+        
         csv = df.to_csv(index=False).encode("utf-8")
         st.download_button(
             label="📥 Download Google Calendar CSV",
@@ -120,5 +121,20 @@ if st.button("Generate My Calendar", type="primary"):
             file_name=f"{selected_name.replace(' ', '_')}_calendar.csv",
             mime="text/csv",
         )
+        
+        # Display Instructions
+        st.markdown("---")
+        st.subheader("📲 How to Import to Google Calendar")
+        st.markdown("""
+        **Highly Recommended:** Create a new, separate calendar just for work shifts before importing. That way, you can easily delete it and start over if you make a mistake or the roster changes!
+
+        1. Go to **Google Calendar** on a desktop/laptop web browser (calendar.google.com).
+        2. Click the **Gear icon ⚙️** in the top right corner and select **Settings**.
+        3. On the left sidebar menu, click **Import & export**.
+        4. Under the "Import" section, click **Select file from your computer** and choose the CSV file you just downloaded.
+        5. In the **Add to calendar** dropdown menu, select the calendar you want to put your shifts into.
+        6. Click the blue **Import** button.
+        """)
+        
     except Exception as e:
         st.error(f"Error processing roster: {e}")
